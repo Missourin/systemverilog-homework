@@ -30,5 +30,6 @@ module mux_4_1
 
 //проверка
 //проверка 2
+//blablabla
 
 endmodule
