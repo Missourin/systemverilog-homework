@@ -29,5 +29,6 @@ module mux_4_1
   // write code for 4:1 mux using "?:" operator
 
 //проверка
+//проверка 2
 
 endmodule
