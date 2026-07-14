@@ -29,7 +29,7 @@ module xor_gate_using_mux
   // constants 0 and 1, and wire connections
 
   wire out;
-  mux mux_b (1'b1, 1'b0, b, out);
-  mux mux_a (b, out, a, o);
+  mux mux_b (.d0(1'b1), .d1(1'b0), .sel(b), .y(out));
+  mux mux_a (.d0(b),    .d1(out),  .sel(a), .y(o));
 
 endmodule
