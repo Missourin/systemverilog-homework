@@ -32,8 +32,8 @@ module round_robin_arbiter_with_2_requests
             2'b01: grants = 2'b01;
             2'b10: grants = 2'b10;
             2'b11: begin
-                if (!priority_guest) grants = 2'b01;
-                else                 grants = 2'b10;
+                if (priority_guest) grants = 2'b01;
+                else                grants = 2'b10;
             end
             default: grants = 2'b00;
         endcase
@@ -42,12 +42,12 @@ module round_robin_arbiter_with_2_requests
     always_ff @ (posedge clk)
         if (rst)
         begin
-            priority_guest <= '0;
+            priority_guest <= '1;
         end
         else
         begin
-            if      (grants == 2'b01) priority_guest <= '1;
-            else if (grants == 2'b10) priority_guest <= '0;
+            if      (grants == 2'b01) priority_guest <= '0;
+            else if (grants == 2'b10) priority_guest <= '1;
             else                      priority_guest <= priority_guest;
         end
 
