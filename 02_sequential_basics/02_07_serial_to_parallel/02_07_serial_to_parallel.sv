@@ -27,5 +27,40 @@ module serial_to_parallel
     // Note:
     // Check the waveform diagram in the README for better understanding.
 
+    logic [width - 1:0    ]   register;
+    logic [$clog2(width):0]   counter;
+    logic                     last_bit;
 
+    assign last_bit = serial_valid & (counter == width - 1);
+
+    always_ff @ (posedge clk) begin
+        if (rst)
+        begin
+            counter        <= '0;
+            register       <= '0;
+            parallel_valid <= '0;
+            parallel_data  <= '0;
+        end
+
+        else
+        begin
+            parallel_valid <= '0;
+
+            if (serial_valid)
+            begin
+                register <= { serial_data, register [width - 1:1] };
+
+                if (last_bit)
+                begin
+                    counter        <= '0;
+                    parallel_valid <= '1;
+                    parallel_data  <= { serial_data, register [width - 1:1] };
+                end
+                else
+                begin
+                    counter  <= counter + 1'b1;
+                end
+            end
+        end
+    end
 endmodule
