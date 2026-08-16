@@ -19,5 +19,19 @@ module halve_tokens
     // a -> 110_011_101_000_1111
     // b -> 010_001_001_000_0101
 
+    logic expect_second;
+
+    assign b = expect_second & a;
+
+    always_ff @ (posedge clk)
+        if (rst)
+            expect_second <= '0;
+        else begin
+            if (expect_second & a)
+                expect_second <= '0;
+            else if (a)
+                expect_second <= '1;
+        end
+
 
 endmodule
