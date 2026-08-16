@@ -18,7 +18,7 @@ module double_tokens
     // an overflow error. The overflow error should be sticky. Once the error is on,
     // the only way to clear it is by using the "rst" reset signal.
     //
-    // Note:
+    // Note :
     // Check the waveform diagram in the README for better understanding.
     //
     // Example:
