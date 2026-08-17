@@ -24,5 +24,19 @@ module conv_last_to_first
     //
     // See README for full description of the task with timing diagram.
 
+    logic is_first_word;
+
+    assign down_valid = up_valid;
+    assign down_data  = up_data;
+    assign down_first = is_first_word;
+
+    always_ff @ (posedge clock) begin
+        if (reset)
+            is_first_word <= 1'b1;
+        else if (up_valid & is_first_word & ~up_last)
+            is_first_word <= 1'b0;
+        else if (up_valid & up_last)
+            is_first_word <= 1'b1;
+    end
 
 endmodule
