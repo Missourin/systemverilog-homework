@@ -82,10 +82,9 @@ module serial_comparator_most_significant_first_using_fsm
   always_comb begin
     new_state = state;
 
-    case (state)
-      st_equal       : if      (~a &  b) new_state = st_a_less_b;
-                       else if ( a & ~b) new_state = st_a_greater_b;
-    endcase
+    if (state == st_equal)
+      if      (~a &  b) new_state = st_a_less_b;
+      else if ( a & ~b) new_state = st_a_greater_b;
   end
 
   assign { a_less_b, a_eq_b, a_greater_b } = new_state;
