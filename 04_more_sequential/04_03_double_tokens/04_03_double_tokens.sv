@@ -28,35 +28,21 @@ module double_tokens
     logic [7:0] in_ones_cnt;
     logic [8:0] out_gen_cnt;
 
-    assign b = (!overflow & (out_gen_cnt > '0 | a)) ? 1'b1 : 1'b0;
+    assign b = !overflow & (out_gen_cnt > '0 | a);
 
-    always_ff @ (posedge clk) begin
-        if (rst) begin
-            in_ones_cnt <= '0;
-            out_gen_cnt <= '0;
-            overflow    <= '0;
-        end
-        else begin
-            if (a) begin
-                in_ones_cnt <= in_ones_cnt + 1'b1;
+    always_ff @ (posedge clk)
+        if (rst)    in_ones_cnt <= '0;
+        else if (a) in_ones_cnt <= in_ones_cnt + 1'b1;
+        else        in_ones_cnt <= '0;
 
-                if (in_ones_cnt >= 8'd200)
-                    overflow <= 1'b1;
-            end
-            else begin
-                in_ones_cnt <= '0;
-            end
+    always_ff @(posedge clk)
+        if (rst)                        overflow <= '0;
+        else if (in_ones_cnt >= 8'd200) overflow <= 1'b1;
 
-            if (a & b) begin
-                out_gen_cnt <= out_gen_cnt + 1'b1;
-            end
-            else if (a) begin
-                out_gen_cnt <= out_gen_cnt + 2'd2;
-            end
-            else if (b) begin
-                out_gen_cnt <= out_gen_cnt - 1'b1;
-            end
-        end
-    end
+    always_ff @(posedge clk)
+        if (rst)        out_gen_cnt <= '0;
+        else if (a & b) out_gen_cnt <= out_gen_cnt + 1'b1;
+        else if (a)     out_gen_cnt <= out_gen_cnt + 2'd2;
+        else if (b)     out_gen_cnt <= out_gen_cnt - 1'b1;
 
 endmodule

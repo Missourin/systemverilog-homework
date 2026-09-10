@@ -10,7 +10,7 @@ module serial_adder_with_vld
   input  a,
   input  b,
   input  last,
-  output sum
+  output logic sum
 );
 
   // Task:
@@ -29,22 +29,19 @@ module serial_adder_with_vld
   //
   // When rst is high, the module should reset its internal state.
 
-  logic sum;
   logic carry;
 
-  always_comb begin
-    sum = '0;
-    if (vld)
-      sum = a ^ b ^ carry;
-  end
+  assign sum = vld ? (a ^ b ^ carry) : '0;
 
-  always_ff @(posedge clk)
-    if (rst)
+  always_ff @(posedge clk) begin
+    if (rst) begin
       carry <= '0;
-    else if (vld)
+    end else if (vld) begin
       if (last)
         carry <= '0;
       else
         carry <= (a & b) | (carry & (a ^ b));
+    end
+  end
 
 endmodule

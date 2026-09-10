@@ -74,85 +74,42 @@ module sort_three_floats (
     output                         err
 );
 
-    // Task:
-    // Implement a module that accepts three Floating-Point numbers and outputs them in the increasing order.
-    // The module should be combinational with zero latency.
-    // The solution can use up to three instances of the "f_less_or_equal" module.
-    //
-    // Notes:
-    // res0 must be less or equal to the res1
-    // res1 must be less or equal to the res2
-    //
-    // The FLEN parameter is defined in the "import/preprocessed/cvw/config-shared.vh" file
-    // and usually equal to the bit width of the double-precision floating-point number, FP64, 64 bits.
+    logic [FLEN-1:0] min_ab, max_ab;
+    logic [FLEN-1:0] min_abc, max_abc;
+    logic ab_le, max_ab_le_c, min_ab_le_min_abc;
+    wire err1, err2, err3;
 
-    wire  err1, err2, err3;
-    logic u0_less_or_equal_u1, u1_less_or_equal_u2, u0_less_or_equal_u2;
-
-    f_less_or_equal i_floe_1
-    (
-        .a   ( unsorted [0]        ),
-        .b   ( unsorted [1]        ),
-        .res ( u0_less_or_equal_u1 ),
-        .err ( err1                )
+    f_less_or_equal i_cmp_ab (
+        .a   ( unsorted[0]  ),
+        .b   ( unsorted[1]  ),
+        .res ( ab_le        ),
+        .err ( err1         )
     );
 
-    f_less_or_equal i_floe_2
-    (
-        .a   ( unsorted [1]        ),
-        .b   ( unsorted [2]        ),
-        .res ( u1_less_or_equal_u2 ),
-        .err ( err2                )
+    assign min_ab = ab_le ? unsorted[0] : unsorted[1];
+    assign max_ab = ab_le ? unsorted[1] : unsorted[0];
+
+    f_less_or_equal i_cmp_maxab_c (
+        .a   ( max_ab      ),
+        .b   ( unsorted[2] ),
+        .res ( max_ab_le_c ),
+        .err ( err2        )
     );
 
-    f_less_or_equal i_floe_3
-    (
-        .a   ( unsorted [0]        ),
-        .b   ( unsorted [2]        ),
-        .res ( u0_less_or_equal_u2 ),
-        .err ( err3                )
+    assign max_abc = max_ab_le_c ? unsorted[2] : max_ab;
+    assign min_abc = max_ab_le_c ? max_ab      : unsorted[2];
+
+    f_less_or_equal i_cmp_minab_minabc (
+        .a   ( min_ab            ),
+        .b   ( min_abc           ),
+        .res ( min_ab_le_min_abc ),
+        .err ( err3              )
     );
+
+    assign sorted[0] = min_ab_le_min_abc ? min_ab  : min_abc;
+    assign sorted[1] = min_ab_le_min_abc ? min_abc : min_ab;
+    assign sorted[2] = max_abc;
 
     assign err = err1 | err2 | err3;
-
-    always_comb begin
-        if (u0_less_or_equal_u1)
-        begin
-            if (u1_less_or_equal_u2)
-            begin
-                sorted = unsorted;
-            end
-            else
-            begin
-                if (u0_less_or_equal_u2)
-                begin
-                    { sorted [0], sorted [1], sorted [2] } = { unsorted [0], unsorted [2], unsorted [1] };
-                end
-                else
-                begin
-                    { sorted [0], sorted [1], sorted [2] } = { unsorted [2], unsorted [0], unsorted [1] };
-                end
-            end
-        end
-
-        else
-        begin
-            if (u1_less_or_equal_u2)
-            begin
-                if (u0_less_or_equal_u2)
-                begin
-                    { sorted [0], sorted [1], sorted [2] } = { unsorted [1], unsorted [0], unsorted [2] };
-                end
-                else
-                begin
-                    { sorted [0], sorted [1], sorted [2] } = { unsorted [1], unsorted [2], unsorted [0] };
-                end
-            end
-            else
-            begin
-                { sorted [0], sorted [1], sorted [2] } = { unsorted [2], unsorted [1], unsorted [0] };
-            end
-        end
-    end
 
 endmodule

@@ -39,16 +39,10 @@ module round_robin_arbiter_with_2_requests
         endcase
     end
 
-    always_ff @ (posedge clk)
-        if (rst)
-        begin
-            priority_guest <= '1;
-        end
-        else
-        begin
-            if      (grants == 2'b01) priority_guest <= '0;
-            else if (grants == 2'b10) priority_guest <= '1;
-            else                      priority_guest <= priority_guest;
-        end
+    always_ff @ (posedge clk) begin
+        if (rst)                  priority_guest <= '1;
+        else if (grants == 2'b01) priority_guest <= '0;
+        else if (grants == 2'b10) priority_guest <= '1;
+    end
 
 endmodule

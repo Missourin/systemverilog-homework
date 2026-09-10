@@ -1,7 +1,3 @@
-//----------------------------------------------------------------------------
-// Task
-//----------------------------------------------------------------------------
-
 module parallel_to_serial
 # (
     parameter width = 8
@@ -9,61 +5,36 @@ module parallel_to_serial
 (
     input                      clk,
     input                      rst,
-
     input                      parallel_valid,
     input        [width - 1:0] parallel_data,
-
     output logic               busy,
     output logic               serial_valid,
     output logic               serial_data
 );
-    // Task:
-    // Implement a module that converts multi-bit parallel value to the single-bit serial data.
-    //
-    // The module should accept 'width' bit input parallel data when 'parallel_valid' input is asserted.
-    // At the same clock cycle as 'parallel_valid' is asserted, the module should output
-    // the least significant bit of the input data. In the following clock cycles the module
-    // should output all the remaining bits of the parallel_data.
-    // Together with providing correct 'serial_data' value, module should also assert the 'serial_valid' output.
-    //
-    // Note:
-    // Check the waveform diagram in the README for better understanding.
 
-    logic [width - 2    :0] shift_reg;
-    logic [$clog2(width):0] cnt;
+    logic [width - 1:0]       shift_reg;
+    logic [width - 1:0]       shift_reg_next;
+    logic [$clog2(width)-1:0] cnt;
 
-    assign serial_data  = parallel_valid ? parallel_data[0] : shift_reg[0];
+    assign shift_reg_next = parallel_valid ? parallel_data
+                                           : { 1'b0, shift_reg[width - 1:1] };
+
+    assign serial_data  = shift_reg_next[0];
     assign serial_valid = parallel_valid | busy;
 
-    always_ff @ (posedge clk)
-        if (rst)
-        begin
-            cnt          <= '0;
-            shift_reg    <= '0;
-            busy         <= '0;
-        end
+    always_ff @(posedge clk)
+        if (rst)                           busy <= 1'b0;
+        else if (parallel_valid)           busy <= 1'b1;
+        else if (busy && cnt == width - 2) busy <= 1'b0;
 
-        else
-        begin
-            if (parallel_valid)
-            begin
-                busy      <= '1;
-                cnt       <= '0;
-                shift_reg <= parallel_data[width - 1:1];
-            end
-            else if (busy)
-            begin
-                shift_reg <= { 1'b0, shift_reg[width - 2:1] };
+    always_ff @(posedge clk)
+        if (rst)                           cnt <= '0;
+        else if (parallel_valid)           cnt <= '0;
+        else if (busy && cnt != width - 2) cnt <= cnt + 1'b1;
 
-                if (cnt == width - 2)
-                begin
-                    busy <= '0;
-                end
-                else
-                begin
-                    cnt  <= cnt + 1'b1;
-                end
-            end
-        end
+    always_ff @(posedge clk)
+        if (rst)                 shift_reg <= '0;
+        else if (parallel_valid) shift_reg <= parallel_data;
+        else if (busy)           shift_reg <= { 1'b0, shift_reg[width - 1:1] };
 
 endmodule

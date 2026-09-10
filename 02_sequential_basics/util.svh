@@ -1,1 +1,2 @@
-`define PH(val) val
+`define PB(x) x
+`define PD(x) x

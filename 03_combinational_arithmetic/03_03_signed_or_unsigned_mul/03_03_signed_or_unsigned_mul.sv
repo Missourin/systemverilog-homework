@@ -53,11 +53,16 @@ module signed_or_unsigned_mul
   output logic [2 * n - 1:0] res
 );
 
-  always_comb begin
-    if (signed_mul)
-      res = $signed(a) * $signed(b);
-    else
-      res = a * b;
-  end
+  // always_comb begin
+  //   if (signed_mul)
+  //     res = $signed(a) * $signed(b);
+  //   else
+  //     res = a * b;
+  // end
+
+  wire [n:0] a_extended = signed_mul ? {a[n-1], a} : {1'b0, a};
+  wire [n:0] b_extended = signed_mul ? {b[n-1], b} : {1'b0, b};
+
+  assign res = $signed(a_extended) * $signed(b_extended);
 
 endmodule

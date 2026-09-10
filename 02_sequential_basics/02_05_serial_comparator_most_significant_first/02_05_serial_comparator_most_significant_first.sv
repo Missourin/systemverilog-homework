@@ -60,9 +60,9 @@ module serial_comparator_most_significant_first
 
   logic prev_a_less_b, prev_a_greater_b;
 
-  assign a_less_b    =  prev_a_less_b | (~ prev_a_less_b & ~ prev_a_greater_b & (~ a & b));
-  assign a_greater_b =  prev_a_greater_b | (~ prev_a_less_b & ~ prev_a_greater_b & (a & ~ b));
-  assign a_eq_b      =  ~ a_less_b & ~ a_greater_b;
+  assign a_less_b    =  prev_a_less_b | (~prev_a_less_b & ~prev_a_greater_b & (~a & b));
+  assign a_greater_b =  prev_a_greater_b | (~prev_a_less_b & ~prev_a_greater_b & (a & ~b));
+  assign a_eq_b      =  ~a_less_b & ~a_greater_b;
 
   always_ff @ (posedge clk)
     if (rst)
