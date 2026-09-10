@@ -91,18 +91,18 @@ module detect_6_bit_sequence_using_fsm
     new_state = state;
 
     case (state)
-      IDLE:   if (  a) new_state = P1;
-      P1:     if (  a) new_state = P11;
-              else     new_state = IDLE;
-      P11:    if (~ a) new_state = P110;
-      P110:   if (~ a) new_state = P1100;
-              else     new_state = P1;
-      P1100:  if (  a) new_state = P11001;
-              else     new_state = IDLE;
-      P11001: if (  a) new_state = FOUND;
-              else     new_state = IDLE;
-      FOUND:  if (  a) new_state = P11;
-              else     new_state = P110;
+      IDLE   : if (  a) new_state = P1;
+      P1     : if (  a) new_state = P11;
+               else     new_state = IDLE;
+      P11    : if (~ a) new_state = P110;
+      P110   : if (~ a) new_state = P1100;
+               else     new_state = P1;
+      P1100  : if (  a) new_state = P11001;
+               else     new_state = IDLE;
+      P11001 : if (  a) new_state = FOUND;
+               else     new_state = IDLE;
+      FOUND  : if (  a) new_state = P11;
+               else     new_state = P110;
     endcase
   end
 
