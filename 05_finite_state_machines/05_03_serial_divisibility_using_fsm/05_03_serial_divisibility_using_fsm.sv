@@ -77,11 +77,11 @@ module serial_divisibility_by_5_using_fsm
 
   enum logic [2:0]
   {
-    mod_0 = 3'b000,
-    mod_1 = 3'b001,
-    mod_2 = 3'b010,
-    mod_3 = 3'b011,
-    mod_4 = 3'b100
+    MOD_0 = 3'b000,
+    MOD_1 = 3'b001,
+    MOD_2 = 3'b010,
+    MOD_3 = 3'b011,
+    MOD_4 = 3'b100
   }
   state, new_state;
 
@@ -89,21 +89,21 @@ module serial_divisibility_by_5_using_fsm
     new_state = state;
 
     case (state)
-      mod_0 : if (new_bit  ) new_state = mod_1;
-      mod_1 : if (new_bit  ) new_state = mod_3;
-              else           new_state = mod_2;
-      mod_2 : if (new_bit  ) new_state = mod_0;
-              else           new_state = mod_4;
-      mod_3 : if (new_bit  ) new_state = mod_2;
-              else           new_state = mod_1;
-      mod_4 : if (~ new_bit) new_state = mod_3;
+      MOD_0 : if (new_bit  ) new_state = MOD_1;
+      MOD_1 : if (new_bit  ) new_state = MOD_3;
+              else           new_state = MOD_2;
+      MOD_2 : if (new_bit  ) new_state = MOD_0;
+              else           new_state = MOD_4;
+      MOD_3 : if (new_bit  ) new_state = MOD_2;
+              else           new_state = MOD_1;
+      MOD_4 : if (~ new_bit) new_state = MOD_3;
     endcase
   end
 
-  assign div_by_5 = (state == mod_0);
+  assign div_by_5 = (state == MOD_0);
 
   always_ff @(posedge clk)
-    if (rst) state <= mod_0;
+    if (rst) state <= MOD_0;
     else     state <= new_state;
 
 endmodule
