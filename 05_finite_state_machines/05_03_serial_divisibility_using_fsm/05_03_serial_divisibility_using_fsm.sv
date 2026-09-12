@@ -90,12 +90,16 @@ module serial_divisibility_by_5_using_fsm
 
     case (state)
       MOD_0 : if (new_bit  ) new_state = MOD_1;
+
       MOD_1 : if (new_bit  ) new_state = MOD_3;
               else           new_state = MOD_2;
+
       MOD_2 : if (new_bit  ) new_state = MOD_0;
               else           new_state = MOD_4;
+
       MOD_3 : if (new_bit  ) new_state = MOD_2;
               else           new_state = MOD_1;
+
       MOD_4 : if (~ new_bit) new_state = MOD_3;
     endcase
   end
