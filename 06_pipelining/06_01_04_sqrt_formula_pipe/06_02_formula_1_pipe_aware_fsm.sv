@@ -61,5 +61,73 @@ module formula_1_pipe_aware_fsm
     // FPGA-Systems Magazine :: FSM :: Issue ALFA (state_0)
     // You can download this issue from https://fpga-systems.ru/fsm#state_0
 
+    enum logic [2:0]
+    {
+        IDLE    = 3'b000,
+        SEND_B  = 3'b001,
+        SEND_C  = 3'b010,
+        WAIT_Y1 = 3'b011,
+        WAIT_Y2 = 3'b100,
+        WAIT_Y3 = 3'b101,
+        DONE    = 3'b110
+    }
+    state, new_state;
+
+    logic [31:0] sqrt_a;
+    logic [31:0] sum_ab;
+    logic [31:0] res_r;
+
+    always_comb begin
+        new_state = state;
+
+        case (state)
+            IDLE    : if (arg_vld)     new_state = SEND_B;
+            SEND_B  :                  new_state = SEND_C;
+            SEND_C  :                  new_state = WAIT_Y1;
+            WAIT_Y1 : if (isqrt_y_vld) new_state = WAIT_Y2;
+            WAIT_Y2 : if (isqrt_y_vld) new_state = WAIT_Y3;
+            WAIT_Y3 : if (isqrt_y_vld) new_state = DONE;
+            DONE    :                  new_state = IDLE;
+        endcase
+    end
+
+    always_ff @(posedge clk)
+        if (rst) state <= IDLE;
+        else     state <= new_state;
+
+    always_comb begin
+        isqrt_x_vld = '0;
+        isqrt_x     = '0;
+
+        case (state)
+            IDLE : begin
+                isqrt_x_vld = arg_vld;
+                isqrt_x     = a;
+            end
+            SEND_B : begin
+                isqrt_x_vld = 1'b1;
+                isqrt_x     = b;
+            end
+            SEND_C : begin
+                isqrt_x_vld = 1'b1;
+                isqrt_x = c;
+            end
+        endcase
+    end
+
+    always_ff @(posedge clk)
+        if      (rst)                             sqrt_a <= '0;
+        else if (state == WAIT_Y1 && isqrt_y_vld) sqrt_a <= { 16'b0, isqrt_y };
+
+    always_ff @(posedge clk)
+        if      (rst)                             sum_ab <= '0;
+        else if (state == WAIT_Y2 && isqrt_y_vld) sum_ab <= sqrt_a + { 16'b0, isqrt_y };
+
+    always_ff @(posedge clk)
+        if      (rst)                             res_r <= '0;
+        else if (state == WAIT_Y3 && isqrt_y_vld) res_r <= sum_ab + { 16'b0, isqrt_y };
+
+    assign res_vld = (state == DONE);
+    assign res     = res_r;
 
 endmodule
