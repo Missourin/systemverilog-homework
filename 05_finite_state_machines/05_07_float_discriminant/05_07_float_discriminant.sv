@@ -58,12 +58,12 @@ module float_discriminant (
         new_state = state;
 
         case (state)
-            IDLE      : if (arg_vld           ) new_state = WAIT_MUL1;
+            IDLE      : if (arg_vld)            new_state = WAIT_MUL1;
             WAIT_MUL1 : if (bb_down && ac_down) new_state = SAVE_MUL1;
             SAVE_MUL1 :                         new_state = WAIT_MUL2;
-            WAIT_MUL2 : if (fourac_down       ) new_state = SAVE_MUL2;
+            WAIT_MUL2 : if (fourac_down)        new_state = SAVE_MUL2;
             SAVE_MUL2 :                         new_state = WAIT_SUB;
-            WAIT_SUB  : if (sub_down          ) new_state = DONE;
+            WAIT_SUB  : if (sub_down)           new_state = DONE;
             DONE      :                         new_state = IDLE;
         endcase
     end
