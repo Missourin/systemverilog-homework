@@ -108,7 +108,7 @@ module circular_buffer_with_valid
         if (rst) ptr <= '0;
         else     ptr <= (ptr == max_ptr) ? '0 : ptr + 1'b1;
 
-    logic [width - 1:0] data  [0:depth - 1];
+    logic [width - 1:0] data [0:depth - 1];
 
     always_ff @(posedge clk)
         data [ptr] <= in_data;
