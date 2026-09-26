@@ -70,7 +70,7 @@ module shift_register_with_valid
 
     // NOTHING TO DO HERE
 
-        logic [width - 1:0] data  [0:depth - 1];
+    logic [width - 1:0] data  [0:depth - 1];
     logic               valid [0:depth - 1];
 
     logic               en    [0:depth - 1];
