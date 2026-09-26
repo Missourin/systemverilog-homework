@@ -81,26 +81,34 @@ module shift_register_with_valid
     logic [width - 1:0] data  [0:depth - 1];
     logic               valid [0:depth - 1];
 
-    always_ff @(posedge clk) begin
+    logic               en    [0:depth - 1];
+
+    always_comb begin
+        en [0] = in_vld;
+
+        for (int i = 1; i < depth; i++)
+            en [i] = valid [i-1];
+    end
+
+    always_ff @(posedge clk)
         if (rst) begin
-            for (int i = 0; i < depth; i ++) begin
-                data  [i] <= '0;
+            for (int i = 0; i < depth; i++) begin
+                data [i]  <= '0;
                 valid [i] <= '0;
             end
         end
-
         else begin
-            data  [0] <= in_data;
-            valid [0] <= in_vld;
+            valid[0] <= in_vld;
 
-            for (int i = 1; i < depth; i ++) begin
-                data  [i] <= data  [i - 1];
-                valid [i] <= valid [i - 1];
-            end
+            for (int i = 1; i < depth; i++)
+                valid [i] <= valid [i-1];
+
+            for (int i = 0; i < depth; i++)
+                if (en [i])
+                    data [i] <= (i == 0) ? in_data : data [i-1];
         end
-    end
 
-    assign out_data = data  [depth - 1];
-    assign out_vld  = valid [depth - 1];
+    assign out_vld  = valid [depth-1];
+    assign out_data = data  [depth-1];
 
 endmodule
