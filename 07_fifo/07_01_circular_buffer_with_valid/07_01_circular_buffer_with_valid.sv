@@ -116,8 +116,12 @@ module circular_buffer_with_valid
     logic valid [0:depth - 1];
 
     always_ff @(posedge clk or posedge rst)
-        if (rst) valid       <= 1'b0;
-        else     valid [ptr] <= in_valid;
+        if (rst) begin
+            for (int i = 0; i < depth; i++)
+                valid [i] <= 1'b0;
+        end
+        else
+            valid [ptr] <= in_valid;
 
     assign out_valid = valid [ptr];
     assign out_data  = data  [ptr];
