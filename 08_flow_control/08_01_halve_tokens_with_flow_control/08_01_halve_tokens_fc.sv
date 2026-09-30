@@ -16,23 +16,33 @@ module halve_tokens_with_flow_control
     output down_data
 );
 
+    // Task:
+    // Implement a serial module that reduces amount of incoming '1' tokens by half.
+    // The module must use the ready-valid protocol.
+    //
+    //  Expected behavior of the module
+    //  1) When the input signals are up_token and up_valid is high, the signal (token) is processed.
+    //  2) Every second signal received for processing is sent to the output of the module.
+    //  3) When the module cannot process the signal, it sets the up_ready signal to a low level.
+    //
+    // Example:
+    // down_ready     ->   1111_1111_1111_0000
+    // up_token       ->   1101_0100_1111_1111
+    // up_valid       ->   1111_1111_0101_1111
+    // down_valid     ->   1111_1111_1111_1000
+    // down_data      ->   0100_0100_0001_0000
+    // up_ready       ->   1111_1111_0101_1000
+
     logic expect_second;
 
-    // up_ready = 1, когда можем принять (готовы, кроме случая, когда ждём второй токен и down_ready=0)
-    assign up_ready   = ~(expect_second & ~down_ready);
-
-    // down_valid = up_valid (как требует тестбенч)
     assign down_valid = up_valid;
-
-    // down_data = 1, если это второй токен пары
+    assign up_ready   = ~expect_second | down_ready;
     assign down_data  = expect_second & up_valid & up_ready & up_token;
-
-    wire up_fire = up_valid & up_ready & up_token;
 
     always_ff @(posedge clk or posedge rst)
         if (rst)
             expect_second <= 1'b0;
-        else if (up_fire)
+        else if (up_valid & up_ready & up_token)
             expect_second <= ~expect_second;
 
 endmodule
