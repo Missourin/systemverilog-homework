@@ -43,7 +43,7 @@ module gearbox_1_to_2_fc
         else if (up_handshake && ~state) hi_buf  <= up_data;
 
     always_ff @(posedge clk)
-        if      (rst)                    out_buf  <= '0;
+        if      (rst)                    out_buf <= '0;
         else if (up_handshake &&  state) out_buf <= { hi_buf, up_data };
 
 endmodule
