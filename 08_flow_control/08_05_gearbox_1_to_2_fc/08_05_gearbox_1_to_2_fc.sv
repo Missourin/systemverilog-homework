@@ -30,9 +30,8 @@ module gearbox_1_to_2_fc
     assign down_data  = out_buf;
 
     always_ff @(posedge clk)
-        if      (rst)                    state <= 1'b0;
-        else if (up_handshake && ~state) state <= 1'b1;
-        else if (up_handshake)           state <= 1'b0;
+        if      (rst)          state <= 1'b0;
+        else if (up_handshake) state <= ~state;
 
     always_ff @(posedge clk)
         if      (rst)                   out_valid <= 1'b0;
