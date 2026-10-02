@@ -39,37 +39,11 @@ module gearbox_1_to_2_fc
         else if (up_handshake && state) out_valid <= 1'b1;
 
     always_ff @(posedge clk)
-        if (rst) begin
-            hi_buf    <= '0;
-            out_buf   <= '0;
-        end
-        else if (up_handshake && ~state)
-            hi_buf  <= up_data;
-        else if (up_handshake &&  state)
-            out_buf <= { hi_buf, up_data };
+        if      (rst)                    hi_buf <= '0;
+        else if (up_handshake && ~state) hi_buf  <= up_data;
 
-    // always @(posedge clk) begin
-    //     if (rst) begin
-    //         state     <= 1'b0;
-    //         out_valid <= 1'b0;
-    //         hi_buf    <= '0;
-    //         out_buf   <= '0;
-    //     end
-    //     else begin
-    //         if (down_handshake)
-    //             out_valid <= 1'b0;
-
-    //         if (up_handshake) begin
-    //             if (state == 1'b0) begin
-    //                 hi_buf <= up_data;
-    //                 state  <= 1'b1;
-    //             end else begin
-    //                 out_buf   <= {hi_buf, up_data};
-    //                 out_valid <= 1'b1;
-    //                 state     <= 1'b0;
-    //             end
-    //         end
-    //     end
-    // end
+    always_ff @(posedge clk)
+        if      (rst)                   out_buf  <= '0;
+        else if (up_handshake &&  state) out_buf <= { hi_buf, up_data };
 
 endmodule
