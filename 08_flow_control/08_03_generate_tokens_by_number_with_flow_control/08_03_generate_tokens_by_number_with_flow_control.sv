@@ -31,8 +31,8 @@ module generate_tokens_by_number_with_flow_control
     logic [WIDTH - 1:0] cnt;
 
     assign up_ready   = (state == IDLE);
-    assign down_valid = (state == SEND);
-    assign down_token = (state == SEND) & (cnt != '0);
+    assign down_valid = (state == SEND) && (cnt > '0);
+    assign down_token = 1'b1;
 
     always_comb begin
         new_state = state;
