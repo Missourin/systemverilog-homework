@@ -92,21 +92,24 @@ module shift_register_with_valid
 
     always_ff @(posedge clk)
         if (rst) begin
-            for (int i = 0; i < depth; i++) begin
-                data [i]  <= '0;
-                valid [i] <= '0;
-            end
+            for (int i = 0; i < depth; i++)
+                valid [i] <= 1'b0;
         end
         else begin
             valid[0] <= in_vld;
 
             for (int i = 1; i < depth; i++)
-                valid [i] <= valid [i-1];
-
-            for (int i = 0; i < depth; i++)
-                if (en [i])
-                    data [i] <= (i == 0) ? in_data : data [i-1];
+                valid [i] <= valid [i - 1];
         end
+
+    always_ff @(posedge clk) begin
+        if (en [0])
+            data [0] <= in_data;
+
+        for (int i = 1; i < depth; i++)
+            if (en [i])
+                data [i] <= data [i - 1];
+    end
 
     assign out_vld  = valid [depth-1];
     assign out_data = data  [depth-1];
