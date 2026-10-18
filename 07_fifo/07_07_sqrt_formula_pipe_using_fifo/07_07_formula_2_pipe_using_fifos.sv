@@ -25,7 +25,6 @@ module formula_2_pipe_using_fifos
 
     logic        b_delayed_vld;
     logic [31:0] b_delayed;
-    logic [32:0] fifo_1_read;
     logic        fifo_1_empty, fifo_1_full;
 
     logic        sum_bc_vld;
@@ -39,7 +38,6 @@ module formula_2_pipe_using_fifos
 
     logic        a_delayed_vld;
     logic [31:0] a_delayed;
-    logic [32:0] fifo_2_read;
     logic        fifo_2_empty, fifo_2_full;
 
     logic        sum_abc_vld;
@@ -64,21 +62,20 @@ module formula_2_pipe_using_fifos
     );
 
     flip_flop_fifo_with_counter #(
-        .width ( 33 ),
+        .width ( 32 ),
         .depth ( N  )
     ) fifo_1 (
         .clk        ( clk            ),
         .rst        ( rst            ),
-        .push       ( 1'b1           ),
-        .pop        ( 1'b1           ),
-        .write_data ( { arg_vld, b } ),
-        .read_data  ( fifo_1_read    ),
+        .push       ( arg_vld        ),
+        .pop        ( isqrt_1_y_vld  ),
+        .write_data ( b              ),
+        .read_data  ( b_delayed      ),
         .empty      ( fifo_1_empty   ),
         .full       ( fifo_1_full    )
     );
 
-    assign b_delayed_vld = fifo_1_read[32];
-    assign b_delayed     = fifo_1_read[31:0];
+    assign b_delayed_vld = ~fifo_1_empty & isqrt_1_y_vld;
 
     assign sum_bc_vld = isqrt_1_y_vld & b_delayed_vld;
     assign sum_bc     = b_delayed + { 16'b0, isqrt_1_y };
@@ -106,21 +103,20 @@ module formula_2_pipe_using_fifos
     );
 
     flip_flop_fifo_with_counter #(
-        .width ( 33    ),
-        .depth ( 2*N+1 )
+        .width ( 32      ),
+        .depth ( 2*N + 1 )
     ) fifo_2 (
         .clk        ( clk            ),
         .rst        ( rst            ),
-        .push       ( 1'b1           ),
-        .pop        ( 1'b1           ),
-        .write_data ( { arg_vld, a } ),
-        .read_data  ( fifo_2_read    ),
+        .push       ( arg_vld        ),
+        .pop        ( isqrt_2_y_vld  ),
+        .write_data ( a              ),
+        .read_data  ( a_delayed      ),
         .empty      ( fifo_2_empty   ),
         .full       ( fifo_2_full    )
     );
 
-    assign a_delayed_vld = fifo_2_read[32];
-    assign a_delayed     = fifo_2_read[31:0];
+    assign a_delayed_vld = ~fifo_2_empty & isqrt_2_y_vld;
 
     assign sum_abc_vld = isqrt_2_y_vld & a_delayed_vld;
     assign sum_abc     = a_delayed + { 16'b0, isqrt_2_y };
