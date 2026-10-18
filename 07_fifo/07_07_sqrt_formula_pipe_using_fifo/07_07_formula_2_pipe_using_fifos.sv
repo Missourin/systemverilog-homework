@@ -23,7 +23,6 @@ module formula_2_pipe_using_fifos
     logic        isqrt_1_y_vld;
     logic [15:0] isqrt_1_y;
 
-    logic        b_delayed_vld;
     logic [31:0] b_delayed;
     logic        fifo_1_empty, fifo_1_full;
 
@@ -36,7 +35,6 @@ module formula_2_pipe_using_fifos
     logic        isqrt_2_y_vld;
     logic [15:0] isqrt_2_y;
 
-    logic        a_delayed_vld;
     logic [31:0] a_delayed;
     logic        fifo_2_empty, fifo_2_full;
 
@@ -75,9 +73,7 @@ module formula_2_pipe_using_fifos
         .full       ( fifo_1_full    )
     );
 
-    assign b_delayed_vld = ~fifo_1_empty & isqrt_1_y_vld;
-
-    assign sum_bc_vld = isqrt_1_y_vld & b_delayed_vld;
+    assign sum_bc_vld = isqrt_1_y_vld & ~fifo_1_empty;
     assign sum_bc     = b_delayed + { 16'b0, isqrt_1_y };
 
     always_ff @(posedge clk or posedge rst)
@@ -116,9 +112,7 @@ module formula_2_pipe_using_fifos
         .full       ( fifo_2_full    )
     );
 
-    assign a_delayed_vld = ~fifo_2_empty & isqrt_2_y_vld;
-
-    assign sum_abc_vld = isqrt_2_y_vld & a_delayed_vld;
+    assign sum_abc_vld = isqrt_2_y_vld & ~fifo_2_empty;
     assign sum_abc     = a_delayed + { 16'b0, isqrt_2_y };
 
     always_ff @(posedge clk or posedge rst)
