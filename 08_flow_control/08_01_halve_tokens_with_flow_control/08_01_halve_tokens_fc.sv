@@ -35,14 +35,27 @@ module halve_tokens_with_flow_control
 
     logic expect_second;
 
-    assign down_valid = up_valid;
+    assign down_valid =  expect_second & up_valid;
     assign up_ready   = ~expect_second | down_ready;
-    assign down_data  = expect_second & up_valid & up_ready & up_token;
+    assign down_data  =  expect_second & up_valid & up_token;
 
     always_ff @(posedge clk or posedge rst)
         if (rst)
             expect_second <= 1'b0;
-        else if (up_valid & up_ready & up_token)
-            expect_second <= ~expect_second;
+        else begin
+            if (~expect_second & up_valid & up_token)
+                expect_second <= 1'b1;
+            else if (expect_second & down_valid & down_ready)
+                expect_second <= 1'b0;
+        end
 
 endmodule
+
+//сделал по итогу под этот пример
+    // Example:
+    // down_ready     ->   1111_1111_1111_0000
+    // up_token       ->   1101_0100_1111_1111
+    // up_valid       ->   1111_1111_0101_1111
+    // down_valid     ->   1111_1111_1111_1000
+    // down_data      ->   0100_0100_0001_0000
+    // up_ready       ->   1111_1111_0101_1000
