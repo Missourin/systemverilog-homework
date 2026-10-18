@@ -22,41 +22,32 @@ module double_tokens_with_flow_control
     wire up_hs   = up_valid & up_ready;
     wire down_hs = down_valid & down_ready;
 
-    wire limit_reached = (cnt >= 7'd100);
+    assign down_valid = 1'b1;
+    assign up_ready   = (cnt < 7'd100);
+    assign down_data  = (out_gen_cnt > 0) ? 1'b1 : (up_valid & up_token);
 
-    assign up_ready = ~limit_reached;
-    assign down_valid = (out_gen_cnt > 0) | up_valid;
-    assign down_data  = (out_gen_cnt > 0) ? 1'b1 : up_token;
-
-    always_ff @(posedge clk) begin
-        if (rst) begin
-            out_gen_cnt <= '0;
-            cnt         <= '0;
-        end
-        else begin
-            if (down_ready) begin
+    always_ff @(posedge clk or posedge rst)
+        if (rst)
+            cnt <= '0;
+        else if (cnt >= 7'd100 & down_ready)
+            cnt <= '0;
+        else if (up_hs) begin
+            if (up_token)
+                cnt <= cnt + 1'b1;
+            else
                 cnt <= '0;
-            end else if (up_hs) begin
-                if (up_token)
-                    cnt <= cnt + 1'b1;
-                else
-                    cnt <= '0;
-            end
+        end
 
+    always_ff @(posedge clk or posedge rst) begin
+        if (rst)
+            out_gen_cnt <= '0;
+        else begin
             case ({up_hs & up_token, down_hs})
-                2'b11: begin
-                    if (out_gen_cnt == 0)
-                        out_gen_cnt <= out_gen_cnt + 1'b1;
-                end
+                2'b11:                      out_gen_cnt <= out_gen_cnt + 1'b1;
+                2'b10:                      out_gen_cnt <= out_gen_cnt + 2'd2;
+                2'b01: if (out_gen_cnt > 0) out_gen_cnt <= out_gen_cnt - 1'b1;
 
-                2'b10: begin
-                    out_gen_cnt <= out_gen_cnt + 2'd2;
-                end
-
-                2'b01: begin
-                    if (out_gen_cnt > 0)
-                        out_gen_cnt <= out_gen_cnt - 1'b1;
-                end
+                default: out_gen_cnt <= out_gen_cnt;
             endcase
         end
     end
