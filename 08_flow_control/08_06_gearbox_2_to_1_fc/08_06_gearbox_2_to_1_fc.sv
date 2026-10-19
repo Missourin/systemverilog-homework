@@ -36,18 +36,21 @@ module gearbox_2_to_1_fc
     logic [2*width - 1:0] buf_data;
 
     assign up_ready   = (state == IDLE);
-    assign down_valid = (state == SEND_HI) | (state == SEND_LO);
+    assign down_valid = (state == SEND_HI) | (state == SEND_LO) | (state == IDLE && up_valid);
 
-    assign down_data  = (state == SEND_HI) ? buf_data [2*width - 1 : width]
-                                           : buf_data [  width - 1 : 0];
+    assign down_data  = (state == IDLE)    ? up_data  [2*width - 1 : width] :
+                        (state == SEND_HI) ? buf_data [2*width - 1 : width] :
+                                             buf_data [  width - 1 : 0];
 
     always_comb begin
         new_state = state;
 
         case (state)
-            IDLE    : if (up_valid & up_ready) new_state = SEND_HI;
-            SEND_HI : if (down_ready)          new_state = SEND_LO;
-            SEND_LO : if (down_ready)          new_state = IDLE;
+            IDLE    : if      (up_valid & down_ready) new_state = SEND_LO;
+                      else if (up_valid)              new_state = SEND_HI;
+
+            SEND_HI : if      (down_ready)            new_state = SEND_LO;
+            SEND_LO : if      (down_ready)            new_state = IDLE;
         endcase
     end
 
@@ -56,6 +59,6 @@ module gearbox_2_to_1_fc
         else     state <= new_state;
 
     always_ff @(posedge clk)
-        if (up_valid & up_ready) buf_data <= up_data;
+        if (state == IDLE & up_valid) buf_data <= up_data;
 
 endmodule
