@@ -4,16 +4,16 @@ module sqrt_formula_distributor
               impl    = 1
 )
 (
-    input         clk,
-    input         rst,
+    input               clk,
+    input               rst,
 
-    input         arg_vld,
-    input  [31:0] a,
-    input  [31:0] b,
-    input  [31:0] c,
+    input               arg_vld,
+    input        [31:0] a,
+    input        [31:0] b,
+    input        [31:0] c,
 
-    output        res_vld,
-    output [31:0] res
+    output logic        res_vld,
+    output logic [31:0] res
 );
 
     // Task:
@@ -43,5 +43,93 @@ module sqrt_formula_distributor
     // Instantiate sufficient number of "formula_1_impl_1_top", "formula_1_impl_2_top",
     // or "formula_2_top" modules to achieve desired performance.
 
+    localparam N = 50;
+    localparam IDX_WIDTH = $clog2(N);
+
+    logic [IDX_WIDTH-1:0] in_idx;
+    logic [IDX_WIDTH-1:0] out_idx;
+
+    logic [31:0] selected_res;
+    logic        selected_vld;
+
+    wire [N-1:0]        inst_arg_vld;
+    wire [N-1:0]        inst_res_vld_raw;
+    wire [31 :0]        inst_res_raw [N-1:0];
+
+    assign selected_res = inst_res_raw     [out_idx];
+    assign selected_vld = inst_res_vld_raw [out_idx];
+
+    always_ff @(posedge clk or posedge rst)
+        if (rst) res <= '0;
+        else     res <= selected_res;
+
+    always_ff @(posedge clk or posedge rst)
+        if (rst) res_vld <= 1'b0;
+        else     res_vld <= selected_vld;
+
+    always_ff @(posedge clk or posedge rst)
+        if (rst)
+            in_idx <= '0;
+        else if (arg_vld) begin
+            if (in_idx == N - 1)
+                in_idx <= '0;
+            else
+                in_idx <= in_idx + 1'b1;
+        end
+
+    always_ff @(posedge clk or posedge rst)
+        if (rst)
+            out_idx <= '0;
+        else if (selected_vld) begin
+            if (out_idx == N - 1)
+                out_idx <= '0;
+            else
+                out_idx <= out_idx + 1'b1;
+        end
+
+    genvar i;
+    generate
+        for (i = 0; i < N; i++) begin : gen_calc_units
+
+            assign inst_arg_vld [i] = arg_vld && (in_idx == i);
+
+            if (formula == 1 && impl == 1) begin : g_f1_i1
+                formula_1_impl_1_top i_top (
+                    .clk     ( clk                  ),
+                    .rst     ( rst                  ),
+                    .arg_vld ( inst_arg_vld     [i] ),
+                    .a       ( a                    ),
+                    .b       ( b                    ),
+                    .c       ( c                    ),
+                    .res_vld ( inst_res_vld_raw [i] ),
+                    .res     ( inst_res_raw     [i] )
+                );
+            end
+            else if (formula == 1 && impl == 2) begin : g_f1_i2
+                formula_1_impl_2_top i_top (
+                    .clk     ( clk                  ),
+                    .rst     ( rst                  ),
+                    .arg_vld ( inst_arg_vld     [i] ),
+                    .a       ( a                    ),
+                    .b       ( b                    ),
+                    .c       ( c                    ),
+                    .res_vld ( inst_res_vld_raw [i] ),
+                    .res     ( inst_res_raw     [i] )
+                );
+            end
+            else begin : g_f2
+                formula_2_top i_top (
+                    .clk     ( clk                  ),
+                    .rst     ( rst                  ),
+                    .arg_vld ( inst_arg_vld     [i] ),
+                    .a       ( a                    ),
+                    .b       ( b                    ),
+                    .c       ( c                    ),
+                    .res_vld ( inst_res_vld_raw [i] ),
+                    .res     ( inst_res_raw     [i] )
+                );
+            end
+        end
+    endgenerate
 
 endmodule
