@@ -69,14 +69,14 @@ module sqrt_formula_distributor
         end
         else begin
             for (int i = 0; i < N; i++) begin
-                arg_vld_reg [i] <= 1'b0;
+                if (arg_vld && (idx == i)) arg_vld_reg [i] <= 1'b1;
+                else                       arg_vld_reg [i] <= 1'b0;
             end
 
             if (arg_vld) begin
                 a_reg       [idx] <= a;
                 b_reg       [idx] <= b;
                 c_reg       [idx] <= c;
-                arg_vld_reg [idx] <= 1'b1;
 
                 if (idx == N - 1) idx <= '0;
                 else              idx <= idx + 1'b1;
