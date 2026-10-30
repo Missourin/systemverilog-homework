@@ -43,7 +43,7 @@ module sqrt_formula_distributor
     // Instantiate sufficient number of "formula_1_impl_1_top", "formula_1_impl_2_top",
     // or "formula_2_top" modules to achieve desired performance.
 
-    localparam N = 35;
+    localparam N = 50;
     localparam IDX_WIDTH = $clog2(N);
 
     logic [31:0] a_reg [N];
