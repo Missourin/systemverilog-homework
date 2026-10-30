@@ -43,93 +43,113 @@ module sqrt_formula_distributor
     // Instantiate sufficient number of "formula_1_impl_1_top", "formula_1_impl_2_top",
     // or "formula_2_top" modules to achieve desired performance.
 
-    localparam N = 50;
+    localparam N = 35;
     localparam IDX_WIDTH = $clog2(N);
 
-    logic [IDX_WIDTH-1:0] in_idx;
-    logic [IDX_WIDTH-1:0] out_idx;
+    logic [31:0] a_reg [N];
+    logic [31:0] b_reg [N];
+    logic [31:0] c_reg [N];
 
-    logic [31:0] selected_res;
-    logic        selected_vld;
+    logic  arg_vld_reg [N];
 
-    wire [N-1:0]        inst_arg_vld;
-    wire [N-1:0]        inst_res_vld_raw;
-    wire [31 :0]        inst_res_raw [N-1:0];
+    logic [IDX_WIDTH-1:0] idx;
 
-    assign selected_res = inst_res_raw     [out_idx];
-    assign selected_vld = inst_res_vld_raw [out_idx];
+    logic [31:0] out_res [N];
+    logic        out_vld [N];
 
-    always_ff @(posedge clk or posedge rst)
-        if (rst) res <= '0;
-        else     res <= selected_res;
-
-    always_ff @(posedge clk or posedge rst)
-        if (rst) res_vld <= 1'b0;
-        else     res_vld <= selected_vld;
-
-    always_ff @(posedge clk or posedge rst)
-        if (rst)
-            in_idx <= '0;
-        else if (arg_vld) begin
-            if (in_idx == N - 1)
-                in_idx <= '0;
-            else
-                in_idx <= in_idx + 1'b1;
+    always_ff @(posedge clk) begin
+        if (rst) begin
+            idx <= '0;
+            for (int i = 0; i < N; i++) begin
+                a_reg       [i] <= '0;
+                b_reg       [i] <= '0;
+                c_reg       [i] <= '0;
+                arg_vld_reg [i] <= 1'b0;
+            end
         end
+        else begin
+            for (int i = 0; i < N; i++) begin
+                arg_vld_reg [i] <= 1'b0;
+            end
 
-    always_ff @(posedge clk or posedge rst)
-        if (rst)
-            out_idx <= '0;
-        else if (selected_vld) begin
-            if (out_idx == N - 1)
-                out_idx <= '0;
-            else
-                out_idx <= out_idx + 1'b1;
+            if (arg_vld) begin
+                a_reg       [idx] <= a;
+                b_reg       [idx] <= b;
+                c_reg       [idx] <= c;
+                arg_vld_reg [idx] <= 1'b1;
+
+                if (idx == N - 1) idx <= '0;
+                else              idx <= idx + 1'b1;
+            end
         end
+    end
 
-    genvar i;
     generate
-        for (i = 0; i < N; i++) begin : gen_calc_units
+      if (formula == 1 && impl == 1) begin : g_f1_i1
+          for (genvar i = 0; i < N; i++) begin : gen_modules
+              formula_1_impl_1_top i_top (
+                  .clk     ( clk             ),
+                  .rst     ( rst             ),
+                  .arg_vld ( arg_vld_reg [i] ),
+                  .a       ( a_reg       [i] ),
+                  .b       ( b_reg       [i] ),
+                  .c       ( c_reg       [i] ),
+                  .res_vld ( out_vld     [i] ),
+                  .res     ( out_res     [i] )
+                  );
+          end
+      end
+      else if (formula == 1 && impl == 2) begin : g_f1_i2
+          for (genvar i = 0; i < N; i++) begin : gen_modules
+              formula_1_impl_2_top i_top (
+                  .clk     ( clk             ),
+                  .rst     ( rst             ),
+                  .arg_vld ( arg_vld_reg [i] ),
+                  .a       ( a_reg       [i] ),
+                  .b       ( b_reg       [i] ),
+                  .c       ( c_reg       [i] ),
+                  .res_vld ( out_vld     [i] ),
+                  .res     ( out_res     [i] )
+                  );
+          end
+      end
+      else begin : g_f2
+          for (genvar i = 0; i < N; i++) begin : gen_modules
+              formula_2_top i_top (
+                  .clk     ( clk             ),
+                  .rst     ( rst             ),
+                  .arg_vld ( arg_vld_reg [i] ),
+                  .a       ( a_reg       [i] ),
+                  .b       ( b_reg       [i] ),
+                  .c       ( c_reg       [i] ),
+                  .res_vld ( out_vld     [i] ),
+                  .res     ( out_res     [i] )
+                  );
+          end
+      end
+    endgenerate
 
-            assign inst_arg_vld [i] = arg_vld && (in_idx == i);
+    logic        res_vld_next;
+    logic [31:0] res_next;
 
-            if (formula == 1 && impl == 1) begin : g_f1_i1
-                formula_1_impl_1_top i_top (
-                    .clk     ( clk                  ),
-                    .rst     ( rst                  ),
-                    .arg_vld ( inst_arg_vld     [i] ),
-                    .a       ( a                    ),
-                    .b       ( b                    ),
-                    .c       ( c                    ),
-                    .res_vld ( inst_res_vld_raw [i] ),
-                    .res     ( inst_res_raw     [i] )
-                );
-            end
-            else if (formula == 1 && impl == 2) begin : g_f1_i2
-                formula_1_impl_2_top i_top (
-                    .clk     ( clk                  ),
-                    .rst     ( rst                  ),
-                    .arg_vld ( inst_arg_vld     [i] ),
-                    .a       ( a                    ),
-                    .b       ( b                    ),
-                    .c       ( c                    ),
-                    .res_vld ( inst_res_vld_raw [i] ),
-                    .res     ( inst_res_raw     [i] )
-                );
-            end
-            else begin : g_f2
-                formula_2_top i_top (
-                    .clk     ( clk                  ),
-                    .rst     ( rst                  ),
-                    .arg_vld ( inst_arg_vld     [i] ),
-                    .a       ( a                    ),
-                    .b       ( b                    ),
-                    .c       ( c                    ),
-                    .res_vld ( inst_res_vld_raw [i] ),
-                    .res     ( inst_res_raw     [i] )
-                );
+    always_comb begin
+        res_vld_next = 1'b0;
+        res_next     = '0;
+
+        for (int i = 0; i < N; i++) begin
+            if (out_vld [i] && !res_vld_next) begin
+                res_vld_next = 1'b1;
+                res_next     = out_res [i];
             end
         end
-    endgenerate
+    end
+
+    always_ff @(posedge clk)
+        if (rst) res_vld <= 1'b0;
+        else     res_vld <= res_vld_next;
+
+    always_ff @(posedge clk)
+      if (rst) res <= '0;
+      else     res <= res_next;
 
 endmodule
